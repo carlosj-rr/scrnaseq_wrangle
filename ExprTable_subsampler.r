@@ -22,4 +22,4 @@ write.table(NC_cells_NC_genes,"<yourfilenamehere>",sep=",", quote=F, col.names=T
 # This table will allow you to do two main things:
     # 1: Make the pan neural cell transcriptome by getting the matching sequences from the reference transcriptomes
     # 2. Tabulate on how many cells each gene is expressed.
-# Both commands to follow.
+# Both scripts to follow.
