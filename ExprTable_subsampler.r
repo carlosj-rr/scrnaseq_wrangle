@@ -19,3 +19,7 @@ NC_cells_NC_genes<-NC_cells[genes_on_idcs,]
 
 # Save table to file!
 write.table(NC_cells_NC_genes,"<yourfilenamehere>",sep=",", quote=F, col.names=T,row.names=T) # Add any additional formatting flags
+# This table will allow you to do two main things:
+    # 1: Make the pan neural cell transcriptome by getting the matching sequences from the reference transcriptomes
+    # 2. Tabulate on how many cells each gene is expressed.
+# Both commands to follow.
