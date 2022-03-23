@@ -107,4 +107,7 @@ tromeSubsampleIdcs<-geneIdxFinder(
 NC_Trome<-Trome[tromeSubsampleIdcs]
 
 # Save it as a FASTA file
-write.FASTA(NC_Trome,"<filename.fasta>")
+write.FASTA(
+    NC_Trome,
+    "<filename.fas>"
+)
