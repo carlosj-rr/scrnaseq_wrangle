@@ -21,7 +21,7 @@ for (row in 1:nrow(NC_cells_NC_genes)) {
             )
         )
 
-    # Extract the gene's ID: ASSUMES THE GENE ID IS THE ROWNAME - WILL NOT WORK IF THE GENE ID IS A COLUMN
+    # Extract the gene's ID: ASSUMES THE GENE ID IS THE ROWNAME - WILL NOT WORK IF THE GENE ID IS IN A COLUMN
     gene_ID<-rownames(
         NC_cells_NC_genes[row,]
         )
