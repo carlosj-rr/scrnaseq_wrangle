@@ -1,2 +1,5 @@
 # Any and all cell expression table and large datasets
 *.gz
+
+# Reference transcriptomes in FASTA format
+*.fas
