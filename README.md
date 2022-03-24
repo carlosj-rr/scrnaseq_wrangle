@@ -1,12 +1,16 @@
 # scrnaseq_wrangle
 The following guide explains step-by-step how to obtain, from the source datasets in [Tarashansky et al. (2021)](https://elifesciences.org/articles/66747), the results from our work in [REF AND LINK].
 
+### Dependencies
+For most R scripts, the **APE package** is needed, ideally the latest version. Versions 3.0 and under will NOT have support for the ```write.FASTA()``` function, so ideally install a version above that, for example, the latest at the time of writing this README file (5.6-2 2022-03-02).
+The R package **"data.table"** is also needed in order to read gzipped tables without the need of decompressing the file before.
+For mouse, the BioConductoR package **"MouseGastrulationData"** is needed, this project has both a [GitHub repository](https://github.com/MarioniLab/EmbryoTimecourse2018), and a [Bioconductor page](https://bioconductor.org/packages/release/data/experiment/html/MouseGastrulationData.html). Once installed, follow the commands detailed in the next section. We used the Bioconductor package.
 ***
 ## Important note
 The commands detailed below will work directly for the majority of the datasets, but the nature of the original datasets (listed in the reference above, within their "Data availability" statement). The main particular cases are:
 - _Danio rerio_: The cells identified as nervous system cells span normalized expression tables from four different time points: 10hpf, 14hpf, 18hpf, and 24hpf. In addition the reference transcriptome was made available to us via the author of the original dataset, and we would be willing to share it upon request.
 - _Xenopus tropicalis_: The column header of this dataset had additional rows, different to the other datasets, so it had to be pre-porcessed in bash with ```zcat GSE113074_Corrected_combined.annotated_counts.tsv.gz | tail -n+10 | tr \[:blank:] "," > GSE113074_Corr_littleHead.csv```, which extracts the top 9 lines, and translates all the tab characters into commas.
-- _Mus musculus_: The raw expression tables for mouse are in a BioConductoR package, and in order to get it, you need to install and load the package in R (MouseGastrulationData), then run: ```> inData<-MouseGastrulationData::EmbryoAtlasData()``` **RAM will be essential for this command, otherwise the size of the table can induce a crash**.
+- _Mus musculus_: The raw expression tables for mouse are in a Bioconductor package (see installation instructions above in **Dependencies**), and in order to get it, you need to install and load the package in R (MouseGastrulationData), then run: ```> inData<-MouseGastrulationData::EmbryoAtlasData()``` **RAM will be essential for this command, otherwise the size of the table can induce a crash**.
 ***
 ### Getting the raw data
 1. Download the Supplementary File 1 from the reference above, called "elife_66747-suppl1-v2.xslx", and titled ["Cell Atlas metadata and cell annotations"](https://cdn.elifesciences.org/articles/66747/elife-66747-supp1-v2.xlsx). This table has a tab for each species, and shows to which cluster each barcode was assigned.
