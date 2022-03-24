@@ -1,17 +1,20 @@
 library(data.table)
 
+#import the *compressed* cell/gene expression table. Ita can be UMI counts, corrected/normalized counts, etc.
 inData<-fread(
     "<filename>.tar.gz"
-    ) #import the *compressed* cell/gene expression table. Ita can be UMI counts, corrected/normalized counts, etc.
+    ) 
 
+# Confirm the column names correspond to the barcodes out lists. They should for all except Xenopus
 colnames(
     inData
-    ) # Confirm the column names correspond to the barcodes out lists. They should for all except Xenopus
+    ) 
 
+# Read in the "[speciescode]_nc_barcodes.csv" tables you produced earlier
 nc_barcodes<-read.table(
     "<filename>",
     sep=","
-    ) # Read in the "[speciescode]_nc_barcodes.csv" tables you produced earlier
+    ) 
 
 colnames(
     nc_barcodes
@@ -19,15 +22,20 @@ colnames(
 
 # Get only the neural cells from the total data table
 nc_column_idcs<-which(
+    # get the column indices that match with the neural barcodes
     colnames(inData) %in% nc_barcodes$barcode
-    ) # get the column indices that match with the neural barcodes
+    ) 
 
-NC_cells<-inData[,..nc_column_idcs] # Extract those columns only from the whole scRNA-seq table
+# Extract those columns only from the whole scRNA-seq table
+NC_cells<-inData[,..nc_column_idcs] 
+
 # Add the gene names as row names to your table. Usually these will be either as rownames already in "inData", or as the first column name.
-gene_names<-inData[,1] # for example, although often it needed a bit more wrangling than that, especially if the gene IDs had a description attached.
+# for example, although often it needed a bit more wrangling than that, especially if the gene IDs had a description attached.
+gene_names<-inData[,1] 
 rownames(
+    # Because NC_cells has the same number and order of rows as inData, we can assign the row numbers like this.
     NC_cells
-    )<-gene_names # Because NC_cells has the same number and order of rows as inData, we can assign the row numbers like this.
+    )<-gene_names 
 
 # IF the gene name has a description attached, it will probably have the ID, then a space, then a description. In these cases, do:
 short_names<-c() #inintialize a vector to store all the ids withOUT their description

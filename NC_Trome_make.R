@@ -68,8 +68,10 @@ geneIdxFinder<-function(
                 )
                 {
                     print(paste("Getting the sequence index of",id))
+                    # 'grep' can be tricky sometimes, because many names can be subsets of other names, this is why a query input must be built with paste.
+                    # In this case, it will look for the sequence ID, and en EOL character afterwards.
                     query<-paste(id,"$",sep="")
-                    tidx<-grep(query,tromeLabels) # grep is tricky sometimes, because many names can be subsets of other names, this is why a query input must be built with paste. In this case, it will look for the sequence ID, and en EOL character afterwards.
+                    tidx<-grep(query,tromeLabels)
         
                     if (
                         length(
