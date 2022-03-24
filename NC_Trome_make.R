@@ -7,11 +7,7 @@ Trome<-read.FASTA("<Your reference transcriptome file>")
 tromeLabels<-labels(Trome) # Make a vector with only the labels of the transcriptome, so that a simpler data structure can be queried later.
 
 # Define a function that extracts the length of a sequence, given an index number, and a reference transcriptome
-seq_len<-function(
-    idx,
-    Trome
-    )
-    {
+seq_len<-function(idx,Trome) {
     size<-as.integer(
         summary(
             Trome[idx]
@@ -23,10 +19,7 @@ seq_len<-function(
 }
 
 # Define a function that uses 'seq_len()' to get, from a vector of sequence indices in a transcriptome, the longest sequence. This is useful for cases in which the same gene ID has several transcripts, and you want only the longest - canonical one.
-getLongestSeqIdx<-function(
-    inp_vect
-    )
-        {
+getLongestSeqIdx<-function(inp_vect) {
             topsize<-0
 
             for (
@@ -58,10 +51,7 @@ getLongestSeqIdx<-function(
 }
 
 # From a list of gene names, get the 
-geneIdxFinder<-function(
-    idcs_on
-    )
-    {
+geneIdxFinder<-function(idcs_on) {
         idcs_vect<-c()
             for (
                 id in idcs_on
