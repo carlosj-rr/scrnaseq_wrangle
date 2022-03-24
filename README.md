@@ -11,7 +11,7 @@ The commands detailed below will work directly for the majority of the datasets,
 ### Getting the raw data
 1. Download the Supplementary File 1 from the reference above, called "elife_66747-suppl1-v2.xslx", and titled ["Cell Atlas metadata and cell annotations"](https://cdn.elifesciences.org/articles/66747/elife-66747-supp1-v2.xlsx). This table has a tab for each species, and shows to which cluster each barcode was assigned.
 
-* Go through each individual sheet, and export it as a CSV file, for the example here, use short species names, followed by "\_clusters.csv". Ex. _Hydra vulgaris_,    Hv_clusters.csv; _Spongilla lacustris_, Sl_clusters.csv, etc. Make sure they match with the following list:
+* Go through each individual sheet, and export it as a CSV file, for the example here, use short species names, followed by "\_clusters.csv". Ex. _Hydra vulgaris_,    Hv_clusters.csv; _Spongilla lacustris_, Sl_clusters.csv, etc. (feel free to check example files in this repo, if you want to be sure it's all looking the same). Make sure they match with the following list:
 - _Hydra vulgaris_ - **Hv**
 - _Spongilla lacustris_ - **Sl**
 - _Schistosoma mansoni_ - **Sa**
