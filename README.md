@@ -2,9 +2,9 @@
 The following guide explains step-by-step how to obtain, from the source datasets in [Tarashansky et al. (2021)](https://elifesciences.org/articles/66747), the results from our work in [REF AND LINK].
 
 ### Dependencies
-For most R scripts, the **APE package** is needed, ideally the latest version. Versions 3.0 and under will NOT have support for the ```write.FASTA()``` function, so ideally install a version above that, for example, the latest at the time of writing this README file (5.6-2 2022-03-02).
-The R package **"data.table"** is also needed in order to read gzipped tables without the need of decompressing the file before.
-For mouse, the BioConductoR package **"MouseGastrulationData"** is needed, this project has both a [GitHub repository](https://github.com/MarioniLab/EmbryoTimecourse2018), and a [Bioconductor page](https://bioconductor.org/packages/release/data/experiment/html/MouseGastrulationData.html). Once installed, follow the commands detailed in the next section. We used the Bioconductor package.
+For most R scripts, the **APE package** is needed. Versions 3.0 and under will NOT have support for the ```write.FASTA()``` function, so ideally install a version above that, for the following scripts we used v5.6-1.
+The R package **"data.table"** (v1.14.2 for the commands shown here) is also needed in order to read gzipped tables without the need of decompressing the file before.
+For mouse, the BioConductoR package **"MouseGastrulationData"** (v1.4.0 for the commands shown here) is needed, this project has both a [GitHub repository](https://github.com/MarioniLab/EmbryoTimecourse2018), and a [Bioconductor page](https://bioconductor.org/packages/release/data/experiment/html/MouseGastrulationData.html). Once installed, follow the commands detailed in the next section. We used the Bioconductor package.
 ***
 ## Important note
 The commands detailed below will work directly for the majority of the datasets, but the nature of the original datasets (listed in the reference above, within their "Data availability" statement). The main particular cases are:
