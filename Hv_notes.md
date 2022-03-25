@@ -22,6 +22,6 @@ You can run ```colnames(inData)``` to confirm that the results are what you want
 11 mitochondrial genes come up as genes expressed in neural cells, and are not in the reference transcriptome. However, they're expressed in a negligible amount of cells (0.02%-0.33% of all cells), so I'll disregard these. Later on, I will remove the genes expressed in less than 50% of all cells.
 
 ````
-last_nuc_gene_idx<-which(rownames(NC_cells_NC_genes) == "MT_ATP8")-1 # MT_ATP8 is the first mitochondrial gene of the list, and they're the last 11 markers, so the index before that should be the last gene we get from the reference transcriptome
+last_nuc_gene_idx<-which(rownames(NC_cells_NC_genes) == "MT_ATP8")-1 # MT_ATP8 is the first mitochondrial gene of the list, and they're the last 11 row names, so the index before that should be the last gene we get from the reference transcriptome
 tromeSubsampleIdcs<-geneIdxFinder(rownames(NC_cells_NC_genes)[1:last_nuc_idx]) # geneIdxFinder()'s call can be modified.
 ````
