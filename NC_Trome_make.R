@@ -1,6 +1,8 @@
 library(ape)
 # Import the reduced table with only the neural cells, and only the genes that were on. It assumes that the gene names are as the row name.
-NC_cells_NC_genes<-read.table("<filename>") # Add any necessary flags for 'read.table()'
+# Modify the flags after the command depending on your text file.
+# What matters is that rownames(NC_cells_NC_genes) returns the gene IDs, and that ncol(NC_cells_NC_genes) has the same amount as NC barcodes identified previously.
+NC_cells_NC_genes<-read.table("<filename>",sep=",",header=T,row.names=1)
 
 # Read in the reference transcriptome in FASTA format, as DNAbin object. Sequence names must match completely or in parts the sequence names in the rows of the 'NC_cells_NC_genes' table
 Trome<-read.FASTA("<Your reference transcriptome file>")
@@ -21,40 +23,25 @@ seq_len<-function(idx,Trome) {
 # Define a function that uses 'seq_len()' to get, from a vector of sequence indices in a transcriptome, the longest sequence. This is useful for cases in which the same gene ID has several transcripts, and you want only the longest - canonical one.
 getLongestSeqIdx<-function(inp_vect) {
             topsize<-0
-
-            for (
-                i in inp_vect
-                )
-                {
-
+            for (i in inp_vect) {
                     len<-seq_len(
                         i,
                         Trome
                         )
-
-                if (
-                    len > topsize
-                    )
-                    {
-
+                if (len > topsize) {
                         topsize<-len
                         outidx<-i
-
                     }
-                
                 }
     
-    return(
-        outidx
-        )
-
+    return(outidx)
 }
 
 # From a list of gene names, get the 
-geneIdxFinder<-function(idcs_on) {
+geneIdxFinder<-function(geneids) {
         idcs_vect<-c()
             for (
-                id in idcs_on
+                id in geneids
                 )
                 {
                     print(paste("Getting the sequence index of",id))
@@ -75,6 +62,7 @@ geneIdxFinder<-function(idcs_on) {
                             }
                             else
                             {
+                                print(tidx)
                                 tidx<-getLongestSeqIdx(
                                     tidx
                                     )
