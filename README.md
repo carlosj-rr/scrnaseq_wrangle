@@ -13,7 +13,7 @@ This repository has all the information needed to produce species-specific lists
     * Note: some `bash` will be needed.
 ***
 4. processo.R
-  * A set of commands to be run (by the user, *not* as an automated script) in R that take as input a scRNA-seq expression levels table and will result in three files:
+  * A set of commands to be run (by the user, *not* as an automated script) in R that take as input an scRNA-seq expression levels table and will result in three files:
     1. A reduced scRNA-seq expression levels table that *only* has neural cells and, only the genes which were expressed in these.
     2. A table of gene counts for each of the genes expressed in 50% or more neural cells.
     3. The list of the canonical transcript of each of the genes in the list in point #2 just above.
