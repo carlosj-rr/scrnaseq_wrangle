@@ -28,7 +28,7 @@ For mouse, the Bioconductor package **"MouseGastrulationData"** (_v1.4.0_ for th
    * This script will produce a file called "[sppcode]\_nc\_barcodes.csv.tmp" for each species, containing only the rows that matched the NC cluster names from the "Neural_and_Muscle_clusterNames.csv" file.
    * These files have to be checked by eye, so superfluous information can be removed. Once this information has been removed, the files can be renamed, excluding the ".tmp" extension. The exact commands we used are in ```species_specific_NBarcodeExtractor.sh```. Notice that for all species but _Xenopus tropicalis_, it's the first column that has the barcode information. In _Xenopus_, the first three columns have information regarding the barcode, so we're keeping those three just in case.
 ### Processing each species' gene expression tables
-The input datasets are in the locations detailed in Table 1.
+The input datasets are in the locations detailed in the [Dataset_links.md](https://github.com/carlosj-rr/scrnaseq_wrangle/blob/main/Dataset_links.md) file of this repository.
 
 With a few exceptions mentioned in the "Species_specific_notes.md" file, the commands detailed in the "processo.R" R script will result in the exact same files that we used for our work.
 ***
