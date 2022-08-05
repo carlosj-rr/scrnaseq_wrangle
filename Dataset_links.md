@@ -1,5 +1,5 @@
 *Danio rerio*
-* Reference transcriptome: [GRCz10_01](https://www.dropbox.com/sh/qn1v69ejzgk3cgr/AABlnOZ8VQd3Hfr2hqVRAvmpa?dl=0)
+* Reference transcriptome: [GRCz10_01](https://www.ncbi.nlm.nih.gov/assembly/GCF_000002035.5/)
 * Reference SRA dataset: [GSE112294](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112294)
 * Input expression tables:
   * **[GSM3067192_10hpf_nm.csv.gz]**(https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM3067192)
