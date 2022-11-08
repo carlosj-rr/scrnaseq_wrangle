@@ -22,7 +22,7 @@ In _Hydra_'s gene expression tables, a simple ```fread("Hv_full_expressionTable.
 inData<-fread("Hv_full_expressionTable.csv")
 rownames(inData)<-inData$V1
 ````
-You can run ```colnames(inData)``` to confirm that the results are what you want.
+You can run ```rownames(inData)``` to confirm that the results are what you want.
 
 When creating the 'outDF' table, the command that produces the 'namevect' has to be modified because the expression data table has a bit of annotation for each gene:
 
