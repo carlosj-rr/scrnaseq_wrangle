@@ -4,8 +4,8 @@
 * Input expression tables:
   * **[GSM3067192_10hpf_nm.csv.gz](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM3067192)**
   * **[GSM3067192_14hpf_nm.csv.gz](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM3067193)**
-  * [GSM3067192_18hpf_nm.csv.gz](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM3067194)
-  * [GSM3067192_24hpf_nm.csv.gz](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM3067195)
+  * **[GSM3067192_18hpf_nm.csv.gz](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM3067194)**
+  * **[GSM3067192_24hpf_nm.csv.gz](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM3067195)**
 
 *Hydra vulgaris*
 * Reference transcriptome: [aepLRv2](https://research.nhgri.nih.gov/hydra/download/?dl=tr)
