@@ -32,8 +32,7 @@ splitter<-function(longname) {
     return(shortname)
     }
 
-outDF$gene.ID<-as.vector(sapply(outDF$gene.ID,splitter))
-namevect<-outDF$gene.ID
+namevect<-as.vector(sapply(rownames(NC_cells_NC_genes),splitter))
 ````
 ***
 ### _Mus musculus_-specific hacks
