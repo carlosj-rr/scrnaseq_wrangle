@@ -16,4 +16,4 @@ This repository has all the information needed to produce species-specific lists
   * A set of commands to be run (by the user, *not* as an automated script - it may need some species-specific modifications, explained in the notes above) in R that take as input a scRNA-seq expression levels table and will result in three files:
     1. A reduced scRNA-seq expression levels table that *only* has neural cells and, only the genes which were expressed in these.
     2. A table of gene counts for each of the genes expressed in 50% or more neural cells.
-    3. The list of the canonical transcript of each of the genes in the list in the point just above.
+    3. The list of the canonical transcript of each of the genes in the list in the point (ii) above.
