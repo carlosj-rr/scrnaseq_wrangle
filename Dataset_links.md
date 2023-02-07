@@ -39,5 +39,6 @@
 * Input expression table: **GSE113074_Corrected_combined.annotated_counts.tsv.gz**
 
 *Mnemiopsis leidyi*
-* Reference transcriptome: [Weizmann Institute Page](https://www.wisdom.weizmann.ac.il/~/arnau/Single_cell_datasets/Mnemiopsis/Mnemiopsis_proteins.fasta)
-* Reference SRA dataset: [Tanay Lab](https://arnau-sebe-pedros.s3.eu-west-1.amazonaws.com/Single_cell_datasets.tar.gz) (`Mnemiopsis_metacell_umifrac`)
+* Reference dataset: [Tanay Lab](https://arnau-sebe-pedros.s3.eu-west-1.amazonaws.com/Single_cell_datasets.tar.gz)
+* scRNA-seq data file: `Mnemiopsis_metacell_umifrac`
+* Reference transcriptome file: `Mnemiopsis_proteins.fasta`
