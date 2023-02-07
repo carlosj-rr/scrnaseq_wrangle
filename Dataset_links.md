@@ -37,3 +37,7 @@
 * Reference transcriptome: [Xtropicalisv9.0.Named.primaryTrs.fa.gz](https://ftp.xenbase.org/pub/Genomics/JGI/Xentr9.0/)
 * Reference SRA dataset: [GSE113074](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113074)
 * Input expression table: **GSE113074_Corrected_combined.annotated_counts.tsv.gz**
+
+*Mnemiopsis leidyi*
+* Reference transcriptome: [Weizmann Institute Page](https://www.wisdom.weizmann.ac.il/~/arnau/Single_cell_datasets/Mnemiopsis/Mnemiopsis_proteins.fasta)
+* Reference SRA dataset: [Tanay Lab](https://arnau-sebe-pedros.s3.eu-west-1.amazonaws.com/Single_cell_datasets.tar.gz) (`Mnemiopsis_metacell_umifrac`)
