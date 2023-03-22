@@ -41,4 +41,4 @@
 *Mnemiopsis leidyi*
 * Reference dataset: [Tanay Lab](https://arnau-sebe-pedros.s3.eu-west-1.amazonaws.com/Single_cell_datasets.tar.gz)
 * scRNA-seq data file: `Mnemiopsis_metacell_umifrac`
-* Reference transcriptome file: `Mnemiopsis_proteins.fasta`
+* Reference transcriptome file: [ML2.2.nt.gz](https://research.nhgri.nih.gov/mnemiopsis/download/download.cgi?dl=transcriptome)
