@@ -4,3 +4,6 @@
 # Reference transcriptomes in FASTA format
 *.fas
 General_guide
+
+# .json config files
+*.json
