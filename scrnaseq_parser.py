@@ -10,8 +10,12 @@ def col_matcher(query,reference):
             ans=i
     return(ans)
 
-def percent(counts_array,num_cells):
+def percent(counts_array: int,num_cells: int) -> float:
     return(100*(counts_array/num_cells))
+
+def col_nc_representation(column: pd.core.series.Series, nc_idcs: list) -> np.ndarray:
+    col_ON=np.where(column > 0)
+    return(np.intersect1d(col_ON,nc_idcs))
 
 def check_inputs(ad_filename: str, ncgenes_filename: str):
     if ".loom" in ad_filename:
@@ -43,7 +47,7 @@ def data_importer(ad_filename: str, ncgenes_filename: str) -> (ad._core.anndata.
         nc_markers=np.array(pd.read_csv(ncgenes_filename, sep="\t")).flatten()
     return(ds_ad,nc_markers)
 
-def counts_table_extractor(ad_obj) -> pd.DataFrame:
+def counts_table_extractor(ad_obj: ad._core.anndata.AnnData) -> pd.DataFrame:
     if type(ad_obj.X) == sc.sparse._csr.csr_matrix:
         out_tab=ad_obj.X.todense()
     else:
@@ -68,13 +72,15 @@ def count_nc_genes(ad_filename: str, ncgenes_filename: str) -> pd.DataFrame:
         l.append(col_matcher(k,ds_data.columns))
     l.sort()
 
-    out_arr=np.array([],dtype=int)
-    for index in l:
-       expressed=np.where(ds_data.iloc[:,[index]] > 0)[0]
-       out_arr=np.append(out_arr,expressed)
-
-    unique,counts=np.unique(out_arr,return_counts=True)
-    gt0=pd.DataFrame(list(zip(ds_data.index[unique],counts)),columns=("barcode","counts"))
+    list1=[]
+    tot_cells=len(ds_data.columns)
+    for col in range(0,tot_cells):
+        val=len(col_nc_representation(ds_data.iloc[:,col],l))
+        list1.append(val)
+        print(f"Finished column {col} of {tot_cells}")
+       
+    gt0=pd.DataFrame(list(zip(ds_data.columns,list1)),columns=("barcode","counts"))
+    
     return(gt0,ds_data)
 
 def nc_gene_set_and_counts(cell_by_nc_marker_counts: pd.DataFrame, ds_data: pd.DataFrame) -> pd.DataFrame:
