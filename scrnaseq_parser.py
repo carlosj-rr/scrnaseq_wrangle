@@ -25,6 +25,12 @@ def check_inputs(ad_filename: str, ncgenes_filename: str):
         raise TypeError(f"List of nerve cell gene markers in an unknown format.\n\nPlease make sure it is in either '.csv' or '.tsv. format.")
 
 #needed
+def correct_axes_orientation(df: pd.DataFrame, nc_markers: np.ndarray) -> pd.DataFrame:
+    if np.any(np.in1d(nc_markers,df.columns)):
+        df=df.transpose()
+    return(df)
+
+#needed
 def data_importer(ad_filename: str, ncgenes_filename: str):
     if ".loom" in ad_filename:
         ds_ad=sp.read_loom(ad_filename)
@@ -57,16 +63,16 @@ def count_nc_genes(ad_filename: str, ncgenes_filename: str) -> (pd.Series,pd.Dat
 
     #Check whether the imported table is an anndata object or not if it is, run 'counts_table_extractor'
     if type(ds_ad) == pd.DataFrame:
-        ds_data=ds_ad
+        ds_data=correct_axes_orientation(ds_ad,nc_markers)
     elif type(ds_ad) == ad.AnnData:
         # extract the tables - make sure the output table is a dense matrix, turn it into a pandas DF with the correct column and row names.
-        ds_data=counts_table_extractor(ds_ad)
-    
+        ds_data=correct_axes_orientation(counts_table_extractor(ds_ad),nc_markers)
 
     nc_gene_ss=ds_data.loc[nc_markers,:]
     gt0=np.sum((nc_gene_ss > 0).astype(int),axis=0)
     
     return(gt0,ds_data)
+
 #OF 2
 def top_tenperc_nc_gene_ids_extractor(nc_markers_representation: pd.Series,ds_data: pd.DataFrame, outfile: str) -> None:
     unique3, counts3 = np.unique(nc_markers_representation,return_counts=True)
