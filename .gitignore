@@ -7,3 +7,6 @@ General_guide
 
 # .json config files
 *.json
+
+# scratch files
+scratch*
