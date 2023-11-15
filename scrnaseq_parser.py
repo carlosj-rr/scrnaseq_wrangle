@@ -95,7 +95,7 @@ def top_tenperc_nc_gene_ids_extractor(nc_markers_representation: pd.Series,ds_da
     smallest_diff_idx=np.where(abs(inverted_cumsum-ten_perc) == abs(inverted_cumsum-ten_perc).min())[0]
     ten_perc_nc_cell_threshold=np.flip(unique3)[smallest_diff_idx][0]
     nc_occupancy=unique3[np.where(unique3 == ten_perc_nc_cell_threshold)[0][0]:len(unique3)]
-    print(f"Top 10% most nerve cell-like cells express {nc_occupancy} of a maximum of {unique3[-1]} nervous system markers expressed.")
+    print(f"Top 10% most nerve cell-like cells express {nc_occupancy.size} of a maximum of {unique3[-1]} nervous system markers expressed.")
     out_arr=np.array([],dtype=str)
     for occup in nc_occupancy:
         new=np.array(nc_markers_representation.index[np.where(nc_markers_representation == occup)[0]])
