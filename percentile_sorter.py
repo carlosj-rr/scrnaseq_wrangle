@@ -119,7 +119,7 @@ def diff_test(bool_data: pd.DataFrame, subpop_indices, perms = 100, bound = 5):
         obs_values = []
         for i in range(bool_data.shape[0]):
                 # set up random selections of cells for permutation test - defaults to 100 permutations
-                subpop_sample = np.random.choice(range(tot_cols),size=(perms,tot_subpop),replace=False) # 'subpopulation permutes'
+                subpop_sample = np.random.choice(range(tot_cols),size=(perms,tot_subpop)) # 'subpopulation permutes'
                 backg_sample = np.array(list(map((lambda x: np.setdiff1d(np.arange(tot_cols), x)), subpop_sample))) # 'background permutes'
                 coords = tuple(map((lambda x,y: (x,y)),subpop_sample, backg_sample)) # tuple where [0] has the random selection that will be the 'subpopulation', and [1] has the background.
                 # append the *actual* ratio of subpopulation expression for gene i
