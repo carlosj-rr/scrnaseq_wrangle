@@ -129,7 +129,7 @@ def diff_test(bool_data: pd.DataFrame, subpop_indices, perms = 100, bound = 5):
                 for j in range(len(coords)):
                         val = expression_ratios(bool_data.iloc[i,:],coords[j])
                         for_ptest.append(val)
-                percentiles.append((np.percentile(for_ptest,lower_bound),np.percentile(for_ptest,upper_bound)))
+                percentiles.append((np.nanpercentile(for_ptest,lower_bound),np.nanpercentile(for_ptest,upper_bound)))
         l = list(zip(obs_values,percentiles))
         dexp_idcs = np.where(list(map((lambda x: np.bitwise_or(x[0] < x[1][0], x[0] > x[1][1])),l)))[0]
         dexp_ids = bool_data.index[dexp_idcs]
@@ -146,6 +146,6 @@ def expression_ratios(series,coords):
                 val = ratio_on/ratio_off
         except ZeroDivisionError:
                 # now what can I put here that 1. does not skew the distribution, and 2. is able to catch genes which ARE expressed in the subset, and not at all in the background?
-                val = None # proportion of cells in which gene is DExpressed in the total. Leave this for the time being.
+                val = float("nan") # proportion of cells in which gene is DExpressed in the total. Leave this for the time being.
                 # so this will work for datasets with very little columns (i.e. MetaCell-type), but can be horrific for datasets with loads of columns.
         return (val)
