@@ -43,6 +43,7 @@ else:
         # Select NS cells, and booleanize the dataset into False (0/2) and True (1/3)
 transf, subpop_indices = ps.subpop_cell_selector(transf, markers, ptile_markers)
 
+transf.to_csv(output_prefix+"_transfTable.csv", sep=",", header=True, index=True)
         #FINALLY, output the list of *other* genes differentially expressed in the subpopulation of cells (uses permutation test)
 diff_exp_genes = ps.diff_test(transf, subpop_indices, permutations, perms_bound)
 
