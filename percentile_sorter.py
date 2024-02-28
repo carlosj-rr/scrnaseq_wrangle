@@ -119,11 +119,11 @@ def diff_test(bool_data: pd.DataFrame, subpop_indices, perms = 100, bound = 5):
         obs_values = []
         for i in range(bool_data.shape[0]):
                 # set up random selections of cells for permutation test - defaults to 100 permutations
-                subpop_sample = np.array([ np.random.choice(range(tot_cols), tot_subpop, replace=False) for x in range(perms)]) # 'subpopulation permutes'
+                subpop_sample = np.array([ np.random.choice(range(tot_cols), tot_subpop, replace=False) for _ in range(perms)]) # 'subpopulation permutes'
                 backg_sample = np.array([list(map((lambda x: np.setdiff1d(np.arange(tot_cols), x)), subpop_sample))])[0] # 'background permutes'
                 coords = tuple(map((lambda x,y: (x,y)),subpop_sample, backg_sample)) # tuple where [0] has the random selection that will be the 'subpopulation', and [1] has the background.
                 # append the *actual* ratio of subpopulation expression for gene i
-                obs_values.append((sum(bool_data.iloc[i,subpop_indices])/tot_subpop)/(sum(bool_data.iloc[i,background_indices])/tot_background))
+                obs_values.append(expression_ratios(bool_data.iloc[i,:],(subpop_indices, background_indices)))
                 # Calculate the 5th and 95th percentiles for each permutation
                 for_ptest = []
                 for j in range(len(coords)):
@@ -140,12 +140,5 @@ def expression_ratios(series,coords):
         qty2 = len(coords[1])
         ratio_on = sum(series.iloc[coords[0]]/qty1)
         ratio_off = sum(series.iloc[coords[1]]/qty2)
-        # Catching errors in the case of genes which are not strongly differentially expressed
-        try:
-                # was getting a lot of ZeroDivisionErrors with ctenophore MetaCell data (not many columns).
-                val = ratio_on/ratio_off
-        except ZeroDivisionError:
-                # now what can I put here that 1. does not skew the distribution, and 2. is able to catch genes which ARE expressed in the subset, and not at all in the background?
-                val = float("nan") # proportion of cells in which gene is DExpressed in the total. Leave this for the time being.
-                # so this will work for datasets with very little columns (i.e. MetaCell-type), but can be horrific for datasets with loads of columns.
+        val = ratio_on - ratio_off
         return (val)
