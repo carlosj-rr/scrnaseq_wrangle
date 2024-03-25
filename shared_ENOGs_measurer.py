@@ -55,7 +55,7 @@ tot2 = np.genfromtxt(tot_enogs2,dtype=str)
 obs_exp = compare_shared(ns1, ns2, curr_scale)
 obs_tot = compare_shared(tot1, tot2, curr_scale)
 perms_vals = np.array([ one_permutation(ns1, ns2, tot1, tot2, curr_scale) for i in range(n_perms) ])
-print(f"Randomized distribution Min = {np.min(perms_vals)}\nMean = {np.mean(perms_vals)}\nMax = {np.max(perms_vals)}\nObserved exp = {obs_exp}\nObserved tot = {obs_tot}")
+print(f"\n####{prefix1} VS {prefix2}####\nRandomized distribution Min = {np.min(perms_vals)}\nMean = {np.mean(perms_vals)}\nMax = {np.max(perms_vals)}\nObserved exp = {obs_exp}\nObserved tot = {obs_tot}")
 ax = plt.gca()
 xlim_val = np.max([np.mean(perms_vals), obs_tot, obs_exp])*1.10
 ax.set_xlim([0,xlim_val])
