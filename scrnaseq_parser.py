@@ -21,27 +21,19 @@ annot_file=args.emapper_annot
 
 #needed
 def check_inputs(ad_filename: str, ncgenes_filename: str):
-    if ".loom" in ad_filename:
-        loom=True
-        h5ad=False
-    elif ".h5ad" in ad_filename:
-        loom=False
-        h5ad=True
+    if ".loom" in ad_filename or ".h5ad" in ad_filename or ".csv" in ad_filename:
+        readable=True
     else:
         raise TypeError(f"Anndata {ad_filename} filetype not recognized.\n\nPlease make sure it is either '.loom' or '.h5ad'.")
     # check if the list of nc gene markers is in CSV:
-    if ".csv" in ncgenes_filename:
-        csv=True
-        tsv=False
-    elif ".tsv" in ncgenes_filename or ".tab" in ncgenes_filename:
-        csv=False
-        tsv=True
+    if ".csv" in ncgenes_filename or ".tsv" in ncgenes_filename or ".tab" in ncgenes_filename:
+        readable=True
     else:
         raise TypeError(f"List of nerve cell gene markers in an unknown format.\n\nPlease make sure it is in either '.csv' or '.tsv. format.")
     print("Input data in a readable format (Loom/H5AD/CSV/TSV)")
-#needed
 
-def correct_axes_orientation(df: pd.DataFrame, nc_markers: np.ndarray) -> (pd.DataFrame,np.ndarray):
+#needed
+def correct_axes_orientation(df: pd.DataFrame, nc_markers: np.ndarray) -> (pd.DataFrame: np.ndarray):
     if type(df.index) == pd.RangeIndex:
         print("imported indices are not gene IDs - assuming first column is the indices...")
         rownames=df.iloc[:,0]
@@ -63,6 +55,9 @@ def data_importer(ad_filename: str, ncgenes_filename: str):
         ds_ad=sp.read_loom(ad_filename)
     elif ".h5ad" in ad_filename:
         ds_ad=sp.read_h5ad(ad_filename)
+    elif ".csv" in ad_filename:
+        ds_ad=pd.read_csv(ad_filename,sep=",", index_col=0,header=0)
+        print("scRNA-seq data read directly as a data frame, with the first column as indices and first row as column headers\nplease make sure this is correct: {ds_ad}")
     if ".csv" in ncgenes_filename:
         nc_markers=np.array(pd.read_csv(ncgenes_filename, sep=",")).flatten()
     elif ".tsv" in ncgenes_filename:
@@ -71,6 +66,9 @@ def data_importer(ad_filename: str, ncgenes_filename: str):
 
 #needed
 def counts_table_extractor(ad_obj: ad._core.anndata.AnnData) -> pd.DataFrame:
+    if type(ad_obj) == pd.DataFrame:
+        out_tab=ad_obj
+        return(out_tab) #early exit if it's already a pandas DF
     if type(ad_obj.X) == sc.sparse._csr.csr_matrix:
         out_tab=ad_obj.X.todense()
     else:
