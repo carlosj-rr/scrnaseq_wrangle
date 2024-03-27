@@ -50,10 +50,10 @@ perms = np.array([ self_permute(ns, tot_non_ns, ssprop) for i in range(1000) ])
 print(f"\nInput sample proportion = {ssprop}\n\nPermutation results:\n{perms}")
 ns_mean, tot_mean = np.mean(perms, axis=0)
 print(f"\n\nPermutation column-wise means:\n\nNC set = {ns_mean}\nEverything else = {tot_mean}")
-plt.hist(perms[:,0], bins=20, color='red')
-plt.hist(perms[:,1], bins=20, color='blue')
-plt.axvline(ns_mean, color="g")
-plt.axvline(tot_mean, color="y")
+plt.hist(perms[:,0], bins=20, color="green", alpha=0.75, lw=0.1) # green, 75% opaque
+plt.hist(perms[:,1], bins=20, color="blue", alpha=0.75, lw=0.1) # blue, 75% opaque
+plt.axvline(ns_mean, color="r") # red
+plt.axvline(tot_mean, color="k") # black
 ax = plt.gca()
 topxlim = 10+(np.max(perms))
 ax.set_xlim([0,topxlim])
