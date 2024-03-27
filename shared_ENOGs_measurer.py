@@ -14,22 +14,29 @@ histogram (scaled down by the smallest observed expENOGs set in the study).
 It plots the observed value of actual observed overlap in between both expENOGs, and the totENOGs.
 """
 parser = argparse.ArgumentParser()
-parser.add_argument("-exp_enogs1","--expENOGs_1", help="List of eggNOG orthogroups found in the nervous system of a species")
-parser.add_argument("-exp_enogs2","--expENOGs_2", help="List of eggNOG orthogroups found in the entire genome of the same species")
-parser.add_argument("-tot_enogs1","--totENOGs_1", help="Proportion of the full datasets that will be subsampled, number between 0 and 1")
-parser.add_argument("-tot_enogs2", "--totENOGs_2", help="Filename of output figure. Extension will determine format (.png, .jpg, .svg, etc. - uses matplotlib.pyplot)")
+parser.add_argument("-sp1","--species_1", help="List of eggNOG orthogroups found in the nervous system of a species")
+parser.add_argument("-sp2","--species_2", help="List of eggNOG orthogroups found in the entire genome of the same species")
+#parser.add_argument("-tot_enogs1","--totENOGs_1", help="Proportion of the full datasets that will be subsampled, number between 0 and 1")
+#parser.add_argument("-tot_enogs2", "--totENOGs_2", help="Filename of output figure. Extension will determine format (.png, .jpg, .svg, etc. - uses matplotlib.pyplot)")
 parser.add_argument("-n_perms", "--number_of_permutations", help="Number of permutations for the histogram data", default=100)
 parser.add_argument("-o", "--output_image_file", help="Filename for the output image - uses matplotlib.pyplot, so .png, .jpg, and .svg are accepted", default="Out.png")
-parser.add_argument("-sc", "--scale_count", help="Scale to be applied to calculations so that all histograms are aligned - usually the lowest number of expENOGs in the whole study", default=1)
+parser.add_argument("-sc", "--scale_count", help="Scale to be applied to calculations so that all histograms are aligned - usually the lowest number of **expENOGs** in the whole study", default=1)
+#parser.add_argument("-sc_tot", "--scale_count_tot", help="Scale to be applied to calculations so that all histograms are aligned - usually the lowest number of **totENOGs** in the whole study", default=1)
 args=parser.parse_args()
 
-exp_enogs1 = args.expENOGs_1
-exp_enogs2 = args.expENOGs_2
-tot_enogs1= args.totENOGs_1
-tot_enogs2 = args.totENOGs_2
+sp1_name = args.species_1
+sp2_name = args.species_2
+sp1_prefix = sp1_name.split( )[0][0] + sp1_name.split( )[1][0]
+sp2_prefix = sp2_name.split( )[0][0] + sp2_name.split( )[1][0]
+
+exp_enogs1 = sp1_prefix+"_nsENOGs.list"
+exp_enogs2 = sp2_prefix+"_nsENOGs.list"
+tot_enogs1= sp1_prefix+"_totENOGs.list"
+tot_enogs2 = sp2_prefix+"_totENOGs.list"
 n_perms = int(args.number_of_permutations)
 output_file = args.output_image_file
-scale_count = int(args.scale_count)
+scale_count_ns = int(args.scale_count)
+#scale_count_tot = int(args.scale_count_tot)
 
 
 def compare_shared(set1,set2,curr_scale):
@@ -44,25 +51,29 @@ def one_permutation(ns_a, ns_b, tot_a,tot_b, curr_scale):
 
 #scale_count = 1826 # Nematostella's count of nsENOGs (the one with the least nsENOGs)
 
-prefix1 = exp_enogs1.split("_")[0]
+#prefix1 = exp_enogs1.split("_")[0]
 ns1 = np.genfromtxt(exp_enogs1,dtype=str)
 tot1 = np.genfromtxt(tot_enogs1,dtype=str)
 
-prefix2 = exp_enogs2.split("_")[0]
+#prefix2 = exp_enogs2.split("_")[0]
 ns2 = np.genfromtxt(exp_enogs2,dtype=str)
-curr_scale = scale_count/ns2.size
+curr_scale_ns = scale_count_ns/ns2.size
 tot2 = np.genfromtxt(tot_enogs2,dtype=str)
-obs_exp = compare_shared(ns1, ns2, curr_scale)
-obs_tot = compare_shared(tot1, tot2, curr_scale)
-perms_vals = np.array([ one_permutation(ns1, ns2, tot1, tot2, curr_scale) for i in range(n_perms) ])
-print(f"\n####{prefix1} VS {prefix2}####\nRandomized distribution Min = {np.min(perms_vals)}\nMean = {np.mean(perms_vals)}\nMax = {np.max(perms_vals)}\nObserved exp = {obs_exp}\nObserved tot = {obs_tot}")
+#curr_scale_tot = scale_count_tot/tot2.size
+obs_exp = compare_shared(ns1, ns2, curr_scale_ns)
+#obs_tot = compare_shared(tot1, tot2, curr_scale_tot)
+perms_vals = np.array([ one_permutation(ns1, ns2, tot1, tot2, curr_scale_ns) for i in range(n_perms) ])
+print(f"\n#### {sp1_name} VS {sp2_name} ####\nRandomized distribution Min = {np.min(perms_vals)}\nMean = {np.mean(perms_vals)}\nMax = {np.max(perms_vals)}\nObserved exp = {obs_exp}\n")
+top_yval = np.histogram(perms_vals)[0].max()
+xlim_val = np.mean(perms_vals)*2
 ax = plt.gca()
-xlim_val = np.max([np.mean(perms_vals), obs_tot, obs_exp])*1.10
 ax.set_xlim([0,xlim_val])
 plt.hist(perms_vals, bins=10)
 plt.axvline(obs_exp, color="r")
-plt.axvline(obs_tot, color="g")
-plt.title("Expected % of shared OGs between "+ prefix1 + " and " + prefix2 + " (blue, N=100)\nwith observed % of shared nervous system OGs (red)", loc='left', fontsize='small')
+#plt.axvline(obs_tot, color="g")
+plt.title("Expected % of shared OGs between "+ sp1_name + " and " + sp2_name + " (blue, N=" + str(n_perms) +")\nwith observed % of shared nervous system OGs (red)", loc='left', fontsize='small')
+plt.text(obs_exp*1.01,top_yval*0.98,"Obs nsENOG ∩", fontsize='small')
+plt.text(np.mean(perms_vals), top_yval*0.05, "Exp ∩",fontsize="small",color="orange",horizontalalignment="center")
 plt.xlabel("% shared OGs")
 plt.ylabel("Counts")
 plt.savefig(output_file)
