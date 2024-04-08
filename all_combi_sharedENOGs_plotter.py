@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import glob
 from itertools import combinations
+import seaborn as sns
 
 files_list=glob.glob("*nsENOGs.list")
 keys=[ x.split("_")[0] for x in files_list]
@@ -30,6 +31,19 @@ def where_is_enog(enog_id, dix):
 # This function can now be applied across all ENOGs to see where each one is being expressed - a presence/absence table, based on the lists from the dictionary
 x = np.array([ where_is_enog(i, d) for i in ddl ])
 data_table=pd.DataFrame(x, index=ddl, columns=d.keys()) # make the table
+data_table['row_sum'] = data_table.sum(axis=1) # add row sums as a new column
+data_table.sort_values('row_sum', ascending=False, inplace=True) # sort so as to put the most represented genes on top
+data_table.to_csv("Out_Binary_table.csv",sep=",") # save the table as a csv
+reduced=data_table.iloc[0:100,0:8] # create a reduced version for plotting
+# Make a heatmap using seaborn
+colnames = list(reduced.columns)
+rownames = list(reduced.index)
+as_np = reduced.to_numpy()
+sns.set(font_scale=0.3)
+ax = sns.heatmap(as_np, linewidths=0.01, annot=as_np, xticklabels=colnames, yticklabels=rownames, cmap="crest")
+ax.xaxis.tick_top()
+plt.savefig("Heatmap.svg")
+plt.close()
 """
 The next one is a neat function that returns the ENOGs shared beteween an arbitrary amount of
 species ids from the dictionary. It does this by subsampling the 'data_table' object to include only
