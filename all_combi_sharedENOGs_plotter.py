@@ -50,6 +50,16 @@ species ids from the dictionary. It does this by subsampling the 'data_table' ob
 the species requested, then outputting the indices that corresponds to rows in which the sum of
 the row was equal to the number of species.
 """
+d_groups = {'Eumetazoan': ['Dr', 'Dm', 'Ml', 'Mm', 'Nv', 'Hv', 'Sp', 'Cg'],
+ 'Cnidarians': ['Hv', 'Nv', 'Sp'],
+ 'Coelenterates': ['Hv', 'Ml', 'Nv', 'Sp'],
+ 'Bilaterians': ['Dr', 'Dm', 'Mm', 'Cg'],
+ 'Verts+cnids': ['Dr', 'Hv', 'Mm', 'Nv', 'Sp'],
+ 'Bilats+cteno': ['Dr', 'Dm', 'Ml', 'Mm', 'Cg'],
+ 'Protostomes': ['Cg', 'Dm'],
+ 'Vertebrates': ['Dr', 'Mm'],
+ 'Verts+cteno': ['Dr', 'Ml', 'Mm']}
+
 def shared_enogs(species: list, data_table: pd.DataFrame):
         tot = len(species)
         shared_enogs=np.array(data_table.index[data_table[species].sum(axis=1) == tot])
@@ -70,7 +80,9 @@ reordered=combis_enog_counts.sort_values("shared ENOGs",ascending=False) # sort 
 
 width=0.5
 ax = reordered.plot(kind="bar", title='Shared nsENOGs per species combinations', xlabel='Organism set', xticks=[], ylabel='count shared ENOGs', width=width, figsize=(8,8))
-labels=[ x.replace("_",", ") for x in reordered.index]
+#labels=[ x.replace("_",", ") for x in reordered.index] # version that uses the list of organism IDs
+# this other option adds the observed counts to the bar labels.
+labels = [ str(reordered.index[i])+" ("+str(reordered.iloc[i,0])+")" for i in range(len(reordered.index)) ]
 
 def autolabel(labels,width):
         for i in range(len(labels)):
