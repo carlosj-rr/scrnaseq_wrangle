@@ -577,33 +577,141 @@ for i in range(len(names2)):
         plt.ylabel("Counts")
         plt.savefig(outfile_name)
         plt.close()
+
+import glob
+import numpy as np
+import pandas as pd
+
+tot_files=glob.glob("*totENOGs.list")
+ref_file="eumetazoa_nsENOGs.list"
+
+d = {}
+
+for i in tot_files:
+        key = i.split("_")[0]
+        val = np.genfromtxt(i, dtype=str)
+        d[key] = val
         
-##### SANITY CHECKS ######
+ref = np.genfromtxt(ref_file, dtype=str)
 
-def self_permute(ns, tot, sscale):
-        ns_chunksize = np.round(ns.size*sscale).astype(int)
-        tot_chunksize = np.round(tot.size * sscale).astype(int)
-        rng = np.random.default_rng()
-        ns_obs1 = rng.choice(ns, size=ns_chunksize, replace=False)
-        ns_obs2 = rng.choice(ns, size=ns_chunksize, replace=False)
-        tot_obs1 = rng.choice(tot, size=tot_chunksize, replace=False)
-        tot_obs2 = rng.choice(tot, size=tot_chunksize, replace=False)
-        prop_ns = compare_shared(ns_obs1, ns_obs2, 1)
-        prop_tot = compare_shared(tot_obs1, tot_obs2, 1)
-        return(prop_ns, prop_tot)
+def compare_shared(set1,set2,curr_scale):
+        #### WATCH OUT!!! % calculated over the second set's total size.
+        shared=np.round(np.intersect1d(set1,set2).size/set2.size*curr_scale*100,1)
+        return(shared)
+ids = []
+perc_shared = []
 
-ns = np.genfromtxt("Ml_nsENOGs.list",dtype=str)
-tot = np.genfromtxt("Ml_totENOGs.list",dtype=str)
-# make non-overlapping sets - not 100% necessary, but tidy.
-tot_non_ns = np.setdiff1d(tot,ns)
-# do 1K permutations, randomly subsampling always 25% from each plot (returns a 2-col array, first col ns perms and second col non-ns perms)
-perms = np.array([ self_permute(ns, tot_non_ns, 0.25) for i in range(1000) ])
-# calculate the means, to put them into the histograms.
-ns_mean, tot_mean = np.mean(perms, axis=0)
-plt.hist(perms[:,0], bins=10, color="r")
-plt.hist(perms[:,1], bins=10, color="b")
-plt.axvline(ns_mean, color="r")
-plt.axvline(tot_mean, color="b")
-ax = plt.gca
-ax.set_xlim([0,50])
-plt.savefig("Spp_SanityCheck1.svg")
+for i in d:
+        ids.append(i)
+        perc_shared.append(compare_shared(d[i], ref))
+
+# Now we put that all into a nice pandas DF...
+tot_comparison=pd.DataFrame(perc_shared, index=ids)
+tot_comparison.columns = ["% eumetazoa nsENOGs in genome"]
+# and we reorder the indices IDs to more or less follow a phylogenetic branching pattern.
+reorder = ["Sr","Mb","Sl","Em","Aq","Ml","Pb","Ta","Nv","Hv","Sp","Sm","Sa","Cg","Dm","Su","Cc","Dr", "Xt","Mm"]
+cmp_table = tot_comparison.reindex(reorder)
+# Should I add also a 'N/M' string? Nah, that would give too much focus on the specific ENOGs, and I'd prefer to avoid that.
+# Time to save it!
+cmp_table.to_csv("EumetNSENOGs_genome_representation.csv",sep=",")
+
+# AI-generated code to infer a phylogenetic tree using ML
+from Bio import AlignIO
+from Bio.Phylo.TreeConstruction import DistanceCalculator
+from Bio.Phylo.TreeConstruction import DistanceTreeConstructor
+from Bio.Phylo import PhyloML
+
+def estimate_phylogenetic_tree(alignment_file):
+    # Load the alignment from a file
+    alignment = AlignIO.read(alignment_file, "fasta")
+
+    # Calculate the distance matrix
+    calculator = DistanceCalculator('identity')
+    distance_matrix = calculator.get_distance(alignment)
+
+    # Construct the tree using the maximum likelihood method
+    constructor = DistanceTreeConstructor()
+    tree = constructor.upgma(distance_matrix)
+
+    # Perform maximum likelihood optimization
+    tree = PhyloML(tree, alignment) # check if it explores different tree topologies - otherwise consider several independent random starting trees or smth
+
+    return tree
+
+# Example usage
+alignment_file = "example_alignment.fasta"
+phylogenetic_tree = estimate_phylogenetic_tree(alignment_file)
+
+# Print the phylogenetic tree
+Phylo.draw(phylogenetic_tree)
+
+import numpy as np
+import pandas as pd
+# First, build a dictionary by importing each of the species' prefixes as the key, and the nsENOG list as the value, let's call it 'd'
+d ={'Cg': np.genfromtxt("Crassostrea_gigas/Cg_nsENOGs.list",dtype=str), 'Dr': np.genfromtxt("Danio_rerio/Dr_inf_nsENOGs.list", dtype=str),
+    'Dm': np.genfromtxt("Drosophila_melanogaster/Dm_inf_nsENOGs.list", dtype=str),
+    'Ml': np.genfromtxt("Mnemiopsis_leidyi/Ml_nsENOGs.list",dtype=str),
+    'Mm': np.genfromtxt("Mus_musculus/Mm_inf_nsENOGs.list",dtype=str) }
+# Automate this, don't type it!
+
+l=[] # a list of list with all the nsENOGs
+for i in d:
+        l.append(list(d[i]))
+
+# flatten and deduplicate the list
+ddl=np.unique([item for sublist in l for item in sublist])
+
+def where_is_enog(enog_id, dix):
+        l=[]
+        for i in dix:
+                l.append(int(enog_id in dix[i]))
+        return(l)
+
+# get the results
+x = np.array([ where_is_enog(i, d) for i in ddl ])
+data_table=pd.DataFrame(x, index=ddl, columns=d.keys()) # make the table
+data_table.sum(axis=1) # add numbers by row, the columns in which the sum is = to the number of columns, should be 39
+
+def shared_enogs(species: list, data_table: pd.DataFrame):
+        tot = len(species)
+        shared_enogs=np.array(data_table.index[data_table[species].sum(axis=1) == tot])
+        return(shared_enogs)
+
+# make a list of all the possible species combinations
+from itertools import combinations
+keys_set=set(d.keys())
+combi_list=[]
+for n in range(2,len(keys_set)+1):
+        curr_comb=list(combinations(keys_set,n))
+        for i in curr_comb:
+                combi_list.append(list(i))
+
+# combi_list has all the possible combinations which can be given to the 'shared_enogs' function.      
+# that loop produces the counts of shared ENOGs
+# Now, let's format these results into a pd.DataFrame for a bar graph
+# First, the labels:
+idcs=[ "_".join(i) for i in combi_list ]
+# Now the values:
+vals=list(map((lambda x: shared_enogs(x, data_table).size),combi_list))
+combis_enog_counts=pd.DataFrame(vals, index=idcs)
+combis_enog_counts.columns=["shared ENOGs"]
+reordered=combis_enog_counts.sort_values("shared ENOGs",ascending=False)
+
+ax = reordered.plot(kind="bar", title='Shared nsENOGs per species combinations', xlabel='Organism set', xticks=[], ylabel='count shared ENOGs', width=width, figsize=(8,8))
+width=0.5
+labels=[ x.replace("_",", ") for x in reordered.index]
+###
+def autolabel(labels,width):
+        for i in range(len(labels)):
+                ax.text(i-(width/2), reordered.iloc[i,0], labels[i], ha='left', va='bottom', rotation=80., fontsize='small')
+autolabel(labels, width)
+plt.savefig("Bar_graph.png")
+plt.close()
+
+
+import pandas as pd
+
+table = pd.read_csv("Out_Binary_table.csv", sep=",", header=0, index_col=0)
+
+for_fasta=table.iloc[:,0:7].T
+for_fasta.to_csv("nsENOGs_presabs.fas", sep=",")

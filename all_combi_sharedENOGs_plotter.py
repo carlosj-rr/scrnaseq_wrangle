@@ -5,23 +5,34 @@ import glob
 from itertools import combinations
 import seaborn as sns
 
-files_list=glob.glob("*nsENOGs.list")
-keys=[ x.split("_")[0] for x in files_list]
+files_list_ns=glob.glob("*nsENOGs.list")
+keys_ns=[ x.split("_")[0] for x in files_list_ns]
+file_list_tot=glob.glob("*totENOGs.list")
+keys_tot=[ x.split("_")[0] for x in file_list_tot]
 
-d = {}
-for i in range(len(keys)):
-    key = keys[i]
-    infile = files_list[i]
-    d[key] = np.genfromtxt(infile,dtype=str)
-# d now holds the species 2-letter code as the key, and its list of nsENOGs as its values
+d_ns = {}
+for i in range(len(keys_ns)):
+    key = keys_ns[i]
+    infile = files_list_ns[i]
+    d_ns[key] = np.genfromtxt(infile,dtype=str)
+# d_ns now holds the species 2-letter code as the key, and its list of nsENOGs as its values
+d_tot = {}
+for i in range(len(keys_tot)):
+    key = keys_tot[i]
+    infile = file_list_tot[i]
+    d_tot[key] = np.genfromtxt(infile,dtype=str)
 
 # Now we can organize the data for the bar chart. First, we get the total list of ENOGs and deduplicate it
-l=[] # a list of lists with all the nsENOGs
-for i in d:
-        l.append(list(d[i]))
-
+l_ns=[] # a list of lists with all the nsENOGs
+for i in d_ns:
+        l_ns.append(list(d_ns[i]))
+ddl_ns=np.unique([item for sublist in l_ns for item in sublist])
+l_tot=[] # a list of lists with all the nsENOGs
+for i in d_tot:
+        l_tot.append(list(d_tot[i]))
+ddl_tot=np.unique([item for sublist in l_tot for item in sublist])
 # flatten and deduplicate the list
-ddl=np.unique([item for sublist in l for item in sublist])
+
 # Now we define a function that returns, for an ENOG, a 1 if it is present in the corresponding species of 'd', or 0 otherwise:
 def where_is_enog(enog_id, dix):
         l=[]
@@ -29,12 +40,17 @@ def where_is_enog(enog_id, dix):
                 l.append(int(enog_id in dix[i]))
         return(l)
 # This function can now be applied across all ENOGs to see where each one is being expressed - a presence/absence table, based on the lists from the dictionary
-x = np.array([ where_is_enog(i, d) for i in ddl ])
-data_table=pd.DataFrame(x, index=ddl, columns=d.keys()) # make the table
-data_table['row_sum'] = data_table.sum(axis=1) # add row sums as a new column
-data_table.sort_values('row_sum', ascending=False, inplace=True) # sort so as to put the most represented genes on top
-data_table.to_csv("Out_Binary_table.csv",sep=",") # save the table as a csv
-reduced=data_table.iloc[0:100,0:8] # create a reduced version for plotting
+x = np.array([ where_is_enog(i, d_ns) for i in ddl_ns ])
+y = np.array([ where_is_enog(i, d_tot) for i in ddl_ns])
+data_table_ns=pd.DataFrame(x, index=ddl_ns, columns=d_ns.keys()) # make the table
+data_table_tot=pd.DataFrame(y, index=ddl_tot, columns=d_tot.keys()) # make the table
+data_table_ns['row_sum'] = data_table_ns.sum(axis=1) # add row sums as a new column
+data_table_tot['row_sum'] = data_table_tot.sum(axis=1) # add row sums as a new column
+data_table_ns.sort_values('row_sum', ascending=False, inplace=True) # sort so as to put the most represented genes on top
+data_table_tot.sort_values('row_sum', ascending=False, inplace=True)
+data_table_ns.to_csv("Out_Binary_table_ns.csv",sep=",") # save the table as a csv
+data_table_tot.to_csv("Out_Binary_table_ns-in-tot.csv",sep=",") # save the table as a csv
+reduced=data_table_ns.iloc[0:100,0:8] # create a reduced version for plotting
 # Make a heatmap using seaborn
 colnames = list(reduced.columns)
 rownames = list(reduced.index)
@@ -42,7 +58,7 @@ as_np = reduced.to_numpy()
 sns.set(font_scale=0.3)
 ax = sns.heatmap(as_np, linewidths=0.01, annot=as_np, xticklabels=colnames, yticklabels=rownames, cmap="crest")
 ax.xaxis.tick_top()
-plt.savefig("Heatmap.svg")
+plt.savefig("Heatmap_ns.svg")
 plt.close()
 """
 The next one is a neat function that returns the ENOGs shared beteween an arbitrary amount of
@@ -66,14 +82,14 @@ def shared_enogs(species: list, data_table: pd.DataFrame):
         return(shared_enogs)
 
 # Now I want to do this for all possible combinations of species
-keys_set=set(d.keys())
+keys_set=set(d_ns.keys())
 combi_list=[]
 for n in range(2,len(keys_set)+1): # Starts with two, because ofc one species will share all its ENOGs with itself.
         curr_comb=list(combinations(keys_set,n))
         for i in curr_comb:
                 combi_list.append(list(i))
 idcs=[ "_".join(i) for i in combi_list ] # making the row indices
-vals=list(map((lambda x: shared_enogs(x, data_table).size),combi_list)) # making the values by applying 'shared_enogs()' over all possible species combinations
+vals=list(map((lambda x: shared_enogs(x, data_table_ns).size),combi_list)) # making the values by applying 'shared_enogs()' over all possible species combinations
 combis_enog_counts=pd.DataFrame(vals, index=idcs) # chuck results into a pandas DF
 combis_enog_counts.columns=["shared ENOGs"]
 reordered=combis_enog_counts.sort_values("shared ENOGs",ascending=False) # sort in ascending order for a neater graph
@@ -89,5 +105,5 @@ def autolabel(labels,width):
                 ax.text(i-(width/2), reordered.iloc[i,0], labels[i], ha='left', va='bottom', rotation=80., fontsize='small')
 autolabel(labels, width)
 
-plt.savefig("Bar_graph.png")
+plt.savefig("Bar_graph_ns.png")
 plt.close()
