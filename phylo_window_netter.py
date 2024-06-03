@@ -5,6 +5,7 @@ from ete3 import PhyloTree
 import subprocess
 import numpy as np
 import pandas as pd
+from io import StringIO
 
 # Function that infers a tree with IQtree for any given alignment:
 def infer_tree(ali_obj, ali_filename):
@@ -66,7 +67,7 @@ def window_maker(ali_filename,w_size):
     dist_mat=pd.DataFrame(np.array(rez),index=axes,columns=axes)
     return(dist_mat)
 
-def calculate_distances(tree):
+def calculate_tip2tip_distances(tree):
     terminals = tree.get_terminals()
     num_terminals = len(terminals)
     distances = np.zeros((num_terminals, num_terminals))
@@ -78,9 +79,26 @@ def calculate_distances(tree):
     return distances
 
 def scale_tree_to_max_dist(tree):
-    distances = calculate_distances(tree)
+    distances = calculate_tip2tip_distances(tree)
     scale = distances.max()
     for clade in tree.find_clades():
         if clade.branch_length is not None:
             clade.branch_length = clade.branch_length/scale
     return(tree)
+
+def tree_converter_ete3toBio(tree):
+    nwck_str=tree.write(format=1)
+    biopyth_t=Phylo.read(StringIO(nwck_str), "newick")
+    return(biopyth_t)
+
+def tree_converter_Biotoete3(tree):
+    newick_buff = StringIO()
+    Phylo.write(tree, newick_buff, "newick")
+    nwk_str = newick_buff.getvalue().strip()
+    outtree = PhyloTree(nwk_str)
+    return outtree
+
+def file_to_str(filename):
+    with open(filename, 'r') as file:
+        line = file.readline().strip()
+    return line

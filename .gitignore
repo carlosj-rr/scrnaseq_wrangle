@@ -13,3 +13,6 @@ scratch*
 
 #files that I'm finished working with but still may have useful code in them
 scrnaseq_parser.py
+
+#test files
+chunk*
