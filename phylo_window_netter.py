@@ -12,7 +12,7 @@ def infer_tree(ali_obj, ali_filename):
     AlignIO.write(ali_obj, ali_filename, "fasta")
     subprocess.run(["iqtree2","-s",ali_filename, "-redo"])
     tree_filename=ali_filename+".treefile"
-    outtree = Phylo.read(tree_filename, "newick")
+    outtree = treefile_to_str(tree_filename)
     # Maybe add a command that removes all the IQtree files, to keep the folders tidy
     return(outtree)
     
@@ -98,7 +98,7 @@ def tree_converter_Biotoete3(tree):
     outtree = PhyloTree(nwk_str)
     return outtree
 
-def file_to_str(filename):
+def treefile_to_str(filename):
     with open(filename, 'r') as file:
         line = file.readline().strip()
     return line
