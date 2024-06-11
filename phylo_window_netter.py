@@ -86,19 +86,15 @@ def scale_tree_to_max_dist(tree):
             clade.branch_length = clade.branch_length/scale
     return(tree)
 
-def tree_converter_ete3toBio(tree):
-    nwck_str=tree.write(format=1)
+def strtoBio(nwck_str):
     biopyth_t=Phylo.read(StringIO(nwck_str), "newick")
-    return(biopyth_t)
+    return biopyth_t
 
-def tree_converter_Biotoete3(tree):
-    newick_buff = StringIO()
-    Phylo.write(tree, newick_buff, "newick")
-    nwk_str = newick_buff.getvalue().strip()
+def strtoEte3(nwk_str):
     outtree = PhyloTree(nwk_str)
     return outtree
 
 def treefile_to_str(filename):
     with open(filename, 'r') as file:
-        line = file.readline().strip()
-    return line
+        nwk_str = file.read().replace("\n","")
+    return nwk_str
