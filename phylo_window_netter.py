@@ -141,3 +141,25 @@ if False:
                 out.append(dist_getter(i,j))
             out_arr = np.array(out).reshape(len(trees_list), len(trees_list))
         return out_arr
+    # Making a figure using MDS (note - it may not be a good idea for massive datasets):
+    import numpy as np
+    from sklearn.manifold import MDS
+    import matplotlib.pyplot as plt
+
+    # Example distance matrix
+    distance_matrix = np.array([[0, 2, 3], [2, 0, 4], [3, 4, 0]])
+
+    # Perform Multidimensional Scaling (MDS)
+    mds = MDS(n_components=2, dissimilarity='precomputed')
+    X_transformed = mds.fit_transform(distance_matrix)
+
+    # Plot the data in a Cartesian plane
+    plt.scatter(X_transformed[:, 0], X_transformed[:, 1], c='b', marker='o') # make marker larger
+    for i, (x, y) in enumerate(zip(X_transformed[:, 0], X_transformed[:, 1])):
+        plt.text(x, y, str(i+1), fontsize=12, ha='center', va='center') # fix labels position
+
+    plt.title('Distance Matrix Visualization in Cartesian Plane')
+    plt.xlabel('Dimension 1')
+    plt.ylabel('Dimension 2')
+    #plt.grid(True)
+    plt.savefig("Example.png") # save as png, with higher resolution
