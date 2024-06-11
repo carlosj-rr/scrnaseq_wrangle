@@ -55,17 +55,18 @@ def window_maker(ali_filename,w_size):
         ali_chunks.append(curr_chunk)
         chunks_fnames.append(curr_file)
     trees=list(map(infer_tree,ali_chunks,chunks_fnames))
-    rez = []
-    for i in trees:
-        t1 = i
-        col = []
-        for j in trees:
-            t2 = j
-            col.append(PhyloTree.robinson_foulds(t1, t2, unrooted_trees=True)[0])
-        rez.append(col)
-    axes=[ ''.join(["t",str(i)]) for i in range(len(trees)) ]
-    dist_mat=pd.DataFrame(np.array(rez),index=axes,columns=axes)
-    return(dist_mat)
+    if False:
+        rez = []
+        for i in trees:
+            t1 = i
+            col = []
+            for j in trees:
+                t2 = j
+                col.append(PhyloTree.robinson_foulds(t1, t2, unrooted_trees=True)[0])
+            rez.append(col)
+        axes=[ ''.join(["t",str(i)]) for i in range(len(trees)) ]
+        dist_mat=pd.DataFrame(np.array(rez),index=axes,columns=axes)
+    return(trees)
 
 def calculate_tip2tip_distances(tree):
     terminals = tree.get_terminals()
@@ -98,3 +99,23 @@ def treefile_to_str(filename):
     with open(filename, 'r') as file:
         nwk_str = file.read().replace("\n","")
     return nwk_str
+
+def get_blengths(Biotree):
+    out = []
+    for clade in Biotree.find_clades():
+        if clade.branch_length:
+            out.append(clade.branch_length)
+    return out
+
+def RF_distance(t1_str, t2_str):
+    t1, t2 = strtoEte3(t1_str), strtoEte3(t2_str)
+    return t1.robinson_foulds(t2, unrooted_trees=True)[0]
+
+def blength_corr(t1_str, t2_str):
+    t1 = scale_tree_to_max_dist(strtoBio(t1_str))
+    t2 = scale_tree_to_max_dist(strtoBio(t2_str))
+    t1.ladderize()
+    t2.ladderize()
+    t1_blen = get_blengths(t1)
+    t2_blen = get_blengths(t2)
+    return abs(np.corrcoef(t1_blen, t2_blen)[0,1])
