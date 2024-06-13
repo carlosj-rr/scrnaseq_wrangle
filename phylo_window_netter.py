@@ -6,6 +6,8 @@ import subprocess
 import numpy as np
 import pandas as pd
 from io import StringIO
+from sklearn.manifold import MDS
+import matplotlib.pyplot as plt
 
 """Takes in an alignment object and its output filename, runs IQTREE, and imports the resulting tree
 as a newick string"""
@@ -48,15 +50,8 @@ def window_treemaker(ali_filename,w_size):
     full_ali = AlignIO.read(ali_filename, "fasta")
     ali_len = len(full_ali[0].seq)
     starts, stops = rangemaker(0, ali_len, w_size)
-    ali_chunks=[]
-    chunks_fnames = []
-    for i in range(len(starts)):
-        curr_start = starts[i]
-        curr_stop = stops[i]
-        curr_chunk = full_ali[:,curr_start:curr_stop]
-        curr_file = "chunk_"+str(i)+".fas"
-        ali_chunks.append(curr_chunk)
-        chunks_fnames.append(curr_file)
+    ali_chunks = [full_ali[:,starts[i]:stops[i]] for i in range(len(starts))]
+    chunks_fnames = [ "chunk_" + str(i)+".fas" for i in range(len(starts)) ]
     trees=list(map(infer_tree,ali_chunks,chunks_fnames))
     return(trees)
 
@@ -125,6 +120,9 @@ def blength_corr(t1_str, t2_str):
 calculated with the 'blength_corr()' function"""
 def dist_getter(t1_str, t2_str):
     rf = RF_distance(t1_str, t2_str)
+    if t1_str == t2_str:
+        output = 0
+        return output
     if rf > 0:
         output = rf
     else:
@@ -132,20 +130,27 @@ def dist_getter(t1_str, t2_str):
     return output
 
 ##################### main #####################
-if False:
-    def main(infile, k):
-        trees_list = window_treemaker(infile, k)
-        out = []
-        for i in trees_list:
-            for j in trees_list:
-                out.append(dist_getter(i,j))
-            out_arr = np.array(out).reshape(len(trees_list), len(trees_list))
-        return out_arr
-    # Making a figure using MDS (note - it may not be a good idea for massive datasets):
-    import numpy as np
-    from sklearn.manifold import MDS
-    import matplotlib.pyplot as plt
 
+def main(infile, k):
+    # cut alignment into windows, run IQTREE for each, and store tree as a newick string
+    trees_list = window_treemaker(infile, k)
+    # create a list of all the pairwise distances between the trees, using the dist_getter() function
+    out = [ dist_getter(i, j) for i in trees_list for j in trees_list ]
+    out_arr = np.array(out).reshape(len(trees_list), len(trees_list))
+    # cluster windows by distance
+    mds = MDS(n_components=2, dissimilarity='precomputed', random_state=42)
+    X_transformed = mds.fit_transform(out_arr)
+    plt.scatter(X_transformed[: ,0], X_transformed[:, 1], c='y', marker='o')
+    for i, (x, y) in enumerate(zip(X_transformed[:, 0], X_transformed[:, 1])):
+        plt.text(x, y, "w_"+str(i), fontsize=12, ha='right', va='bottom')
+    plt.title("Window Size = "+str(k))
+    plt.xlabel("Axis 1")
+    plt.ylabel("Axis 2")
+    plt.savefig("k"+str(k)+"_bp-MDS.png")
+    plt.close()
+    return
+    # Making a figure using MDS (note - it may not be a good idea for massive datasets):
+if False:
     # Example distance matrix
     distance_matrix = np.array([[0, 2, 3], [2, 0, 4], [3, 4, 0]])
 
