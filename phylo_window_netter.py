@@ -129,6 +129,24 @@ def dist_getter(t1_str, t2_str):
         output = blength_corr(t1_str, t2_str)
     return output
 
+def tree_nester(list_of_trees):
+    window_ids = [ "w"+str(i+1) for i in range(len(list_of_trees)) ]
+    treesdict = dict(zip(window_ids, list_of_trees))
+    out_dict = {}
+    scratch_list = []
+    for i in range(len(window_ids)):
+        t1_str = treesdict[window_ids[i]]
+        t1_rf0 = []
+        for j in range(len(window_ids)):
+            t2_str = treesdict[window_ids[j]]
+            dist = RF_distance(t1_str, t2_str)
+            if dist == 0:
+                t1_rf0.append(window_ids[j])
+        if t1_rf0 not in scratch_list:
+            out_dict[window_ids[i]] = t1_rf0
+            scratch_list.append(t1_rf0)
+    return out_dict
+
 ##################### main #####################
 
 def main(infile, k):
@@ -137,6 +155,7 @@ def main(infile, k):
     # create a list of all the pairwise distances between the trees, using the dist_getter() function
     out = [ dist_getter(i, j) for i in trees_list for j in trees_list ]
     out_arr = np.array(out).reshape(len(trees_list), len(trees_list))
+    return out_arr
     # cluster windows by distance
     mds = MDS(n_components=2, dissimilarity='precomputed', random_state=42)
     X_transformed = mds.fit_transform(out_arr)
