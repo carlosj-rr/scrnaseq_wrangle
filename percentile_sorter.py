@@ -171,7 +171,7 @@ def subpop_cell_selector(transformed_dataset: pd.DataFrame, markers: np.ndarray,
 
 def diff_test(bool_data: pd.DataFrame, subpop_indices, perms = 100, bound = 5):
         """
-        PERMUTATION TEST-TURBOCHARGED FUNCTION TO IDENTIFY NEW DIFFERENTIALLY EXPRESSED CELL MARKERS
+        PERMUTATION TEST-TURBOCHARGED FUNCTION TO IDENTIFY NEW DIFFERENTIALLY EXPRESSED GENES
         INPUTS:
         1. 'Booleanised' UMI dataframe
         2. numpy array of cell subpopulation column indices
