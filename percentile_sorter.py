@@ -223,11 +223,11 @@ def diff_test(bool_data: pd.DataFrame, subpop_indices, perms = 100, bound = 5):
                 backg_sample = np.array([list(map((lambda x: np.setdiff1d(np.arange(tot_cols), x)), subpop_sample))])[0] # 'background permutes'
                 coords = tuple(map((lambda x,y: (x,y)),subpop_sample, backg_sample)) # tuple where [0] has the random selection that will be the 'subpopulation', and [1] has the background.
                 # append the *actual* ratio of subpopulation expression for gene i
-                obs_values.append(expression_ratios(bool_data.iloc[i,:],(subpop_indices, background_indices)))
+                obs_values.append(pep(bool_data.iloc[i,:],(subpop_indices, background_indices)))
                 # Calculate the 5th and 95th percentiles for each permutation
                 for_ptest = []
                 for j in range(len(coords)):
-                        val = expression_ratios(bool_data.iloc[i,:],coords[j])
+                        val = pep(bool_data.iloc[i,:],coords[j])
                         for_ptest.append(val)
                 percentiles.append((np.nanpercentile(for_ptest,lower_bound),np.nanpercentile(for_ptest,upper_bound)))
         l = list(zip(obs_values,percentiles))
@@ -235,7 +235,7 @@ def diff_test(bool_data: pd.DataFrame, subpop_indices, perms = 100, bound = 5):
         dexp_ids = bool_data.index[dexp_idcs]
         return(dexp_ids)
 
-def expression_ratios(series,coords):
+def pep(series,coords):
         qty1 = len(coords[0])
         qty2 = len(coords[1])
         ratio_on = sum(series.iloc[coords[0]]/qty1)
