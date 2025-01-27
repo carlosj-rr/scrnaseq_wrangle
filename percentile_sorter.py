@@ -53,21 +53,29 @@ def umitable_importer(in_table_file, markers):
                 dat = dat.T
         return(dat)      
            
-""" Reads the UMI counts table as a pandas DF, removes uninformative rows by:
-simulating a monotone distribution of the same size, based on the *median* gene expression value, and removing the whole row if
-its own expression does not differ significantly from the monotone distribution, following a Smirnov-Kolmogorov test.
-Then, it recodes all others as
-1 - downregulated
-2 - normally expressed, and
-3 - upregulated,
-based on percentiles defined by the 'bound' variable.
-Ex. bound = 5: any cell expressing the gene at a level < 5th percentile is recoded to 1
-any cell expressing the gene between the 5th percentile and the 95th percentile is recoded to 2
-any cell expressing the gene => 95th percentile is recoded to 3
 
-*Outputs the recoded table without the uninformative rows.
-"""
 def umi_counts_transformer(in_data: pd.DataFrame, bound = 5):
+        """
+        FUNCTION TO RECODE UMI COUNTS TABLE BASED ON GLOBAL DIFFERENTIAL EXPRESSION AND REMOVE UNINFORMATIVE GENES
+        *INPUT: 
+        1. UMI counts table as a pandas DF,
+        2. 'bound' variable for differential expression detection stringency
+        
+        First, this function removes uninformative rows by:
+        simulating a monotone distribution of the same size, based on the *median* gene expression value, and removing the whole row if
+        its own expression does not differ significantly from the monotone distribution, following a Smirnov-Kolmogorov test.
+        Then, it recodes all others as
+        1 - downregulated
+        2 - normally expressed, and
+        3 - upregulated,
+        based on percentiles defined by the 'bound' variable.
+        
+        Ex. bound = 5: any cell expressing the gene at a level < 5th percentile is recoded to 1
+        any cell expressing the gene between the 5th percentile and the 95th percentile is recoded to 2
+        any cell expressing the gene => 95th percentile is recoded to 3
+        
+        *OUTPUT: A recoded table without the uninformative rows.
+        """
         # Assume a UMI counts table as a pandas Data Frame.
         # define upper and lower percentile bounds
         lower_bound = bound
@@ -103,13 +111,51 @@ def umi_counts_transformer(in_data: pd.DataFrame, bound = 5):
                         in_data.iloc[i,normies] = 2
                 out_data=in_data.iloc[informative_rows]
         return out_data
-    
+
 def subpop_cell_selector(transformed_dataset: pd.DataFrame, markers: np.ndarray, percentile = 95):
+        """ 
+        FUNCTION TO SELECT A CELL SUBPOPULATION BASED ON GENETIC MARKERS KNOWN A PRIORI
+        INPUTS:
+        1. the recoded UMI counts pandas DF (after using 'umi_counts_transformer()' above).
+        2. a list of known cell markers (eg. genes differentially expressed in our cell population of interest).
+        3. an percentile threshold.
+        
+        This function FIRST checks whether the input DF has some of the informative markers.
+        If they have been removed because they are not informative, the function returns a (sad) message and exits.
+        This probably means the dataset is not great.
+        
+        If there ARE markers present, this function turns the entire (recoded) DF into Boolean values:
+        * 'True' for any value which is differentially expressed (ie. having a value of '1' - downregulated, or '3' - upregulated: see lines 57-64 above)
+        * 'False' for any value which is NOT differentially expressed (ie. having a '2')
+        
+        ***NOTE that this operation effectively treats up- and downregulation as equally meaningful signs of differential expression.***
+        
+        THEN, this function counts, for each cell(=column), how many 'True' values it has *in the cell markers of interest*.
+        This returns a distribution ranging from the cells which had the least representation of the cell markers to the ones which had the most.
+        Then, the subpopulation marked by the marker of interest is chosen as the cells above the 'percentile' (default 95th) percentile\
+        of cells differentially expressing the markers of interest.
+        
+        Example
+        100 markers of interest across 1000 cells:
+        Most cells will have 0 of those expressed - but taking pleiotropy in mind, probably some markers will be expressed non-specifically.
+        Cells from the population will rarely have all markers expressed (their expression will depend on sub-lineage, cell cycle stage, transcriptional noise, etc.),\
+        but a well-identified cell will probably express a high proportion of those 100 markers.
+        
+        Hence, there will be a (potentially left-biased) distribution that will have on the left tail the cells differentially expressing the least of the markers\
+        and on the right tail the ones differentially expressing the most markers of interest.
+        
+        Only the top 5% (by default) are selected as the putative cell subpopulation.
+        
+        OUTPUTS:
+        1. Boolean table as a pandas DF
+        2. *Column indices* of the inferred members of the cell subpopulation as a numpy array
+        
+        """
         transf = transformed_dataset
         # Check which of the subpop markers are in the 'informative markers' dataset - exit if none
         markers_present = np.intersect1d(transf.index, markers)
         if len(markers_present) == 0:
-                print("No markers are informative in this dataset - :(.")
+                print("There are no informative markers in this dataset - :(.")
                 exit
         else:
                 # Get the row index of each of the subpopulation markers, and sort them
@@ -124,6 +170,40 @@ def subpop_cell_selector(transformed_dataset: pd.DataFrame, markers: np.ndarray,
         return(bool_dset,subpop_indices)
 
 def diff_test(bool_data: pd.DataFrame, subpop_indices, perms = 100, bound = 5):
+        """
+        PERMUTATION TEST-TURBOCHARGED FUNCTION TO IDENTIFY NEW DIFFERENTIALLY EXPRESSED CELL MARKERS
+        INPUTS:
+        1. 'Booleanised' UMI dataframe
+        2. numpy array of cell subpopulation column indices
+        3. number of permutations for permutation test
+        4. percentile bound for accepting a new gene as differentially expressed
+
+        The general spirit of this function is to identify genes which are differentially expressed in cells of interest\
+        by seeing how much their differential expression 'prefers' the cells of interest.
+
+        This preference is measured by how the sets of cells in which they are differentially expressed includes more or less\
+        of the cells of interest in comparison to random choices.
+
+        Ex.
+        Gene A is differentially expressed (has a 'True' value) in 100 out of 200 cells.
+        We have 100 cells of interest. Is Gene A *preferentially* differentially expressed in our cells of interest?
+        Case X: If all 100 cells in which Gene A is differentially expressed are the 100 cells of interest, we would say yes.
+        Case Y: On the other hand, if none of 100 cells in which Gene A is differentially expressed are the 100 cells of interest,\
+        we would say no. This function measures differential expression preference with a proportional expression preference (PEP) metric.
+        This metric is the proportion of cells of interest (foreground cell population) in which a cell is differentially expressed *minus*\
+        the proportion of the other cells (background cell population) in which a gene is differentially expressed, and it ranges from -1 to 1,\
+        with 0 being no preference whatsoever.
+        Case X:
+        PEP = 1 - all cells of interest are differentially expressed, and none of the other ones are
+        Case Y:
+        PEP = -1 - no cell of interest is differentially expressed, AND all of the other ones ARE.
+
+        But what about all the cases in between?
+
+        In order to solve this problem, this function selects 100 random sets of cells *with a size equal to the number of cells of interest*.
+        Then, for each gene, it calculates the PEP metric, creating a distribution of PEP values.
+        
+        """
         lower_bound = bound
         upper_bound = 100-bound
         # calculate the total of columns in the full dataset
