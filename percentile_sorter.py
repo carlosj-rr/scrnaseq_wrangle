@@ -3,7 +3,9 @@ import numpy as np
 import scipy as sc
 import scanpy as sp
 
+#Reads in a UMI-counts table in H5AD/LOOM/CSV/TSV/H5 and outputs a pandas DF, making sure the column and index headers are correct.
 def umitable_importer(in_table_file, markers):
+        # H5AD/LOOM import
         if ".h5ad" in in_table_file or ".loom" in in_table_file:
                 print("input dataset is a compressed AnnData object.")
                 if ".h5ad" in in_table_file:
@@ -14,6 +16,7 @@ def umitable_importer(in_table_file, markers):
                         adata = sp.read_loom(in_table_file)
                 axisA = adata.obs.index
                 axisB = adata.var.loc[:,adata.var.columns[0]]
+                #Checks if data is in sparse matrix fmt and converts it to a dense matrix
                 if type(adata.X) == sc.sparse._csr.csr_matrix:
                         print("Dataset is in sparse matrix format - converting to a dense matrix")
                         dat = pd.DataFrame(data=adata.X.to_dense().astype(int))
@@ -35,7 +38,7 @@ def umitable_importer(in_table_file, markers):
                 axisA = dat.index
                 axisB = dat.columns
         axes = (axisA, axisB)
-        
+        # Extracts the gene and cell ids, to make sure they are in the right place (for this code, cell IDs are columns and gene ids are indices).
         gene_ids = [ axis for axis in axes if np.intersect1d(axis, markers).size > 0 ]
         cell_ids = [ axis for axis in axes if np.intersect1d(axis, markers).size == 0 ]
         
@@ -50,20 +53,37 @@ def umitable_importer(in_table_file, markers):
                 dat = dat.T
         return(dat)      
            
+""" Reads the UMI counts table as a pandas DF, removes uninformative rows by:
+simulating a monotone distribution of the same size, based on the *median* gene expression value, and removing the whole row if
+its own expression does not differ significantly from the monotone distribution, following a Smirnov-Kolmogorov test.
+Then, it recodes all others as
+1 - downregulated
+2 - normally expressed, and
+3 - upregulated,
+based on percentiles defined by the 'bound' variable.
+Ex. bound = 5: any cell expressing the gene at a level < 5th percentile is recoded to 1
+any cell expressing the gene between the 5th percentile and the 95th percentile is recoded to 2
+any cell expressing the gene => 95th percentile is recoded to 3
 
+*Outputs the recoded table without the uninformative rows.
+"""
 def umi_counts_transformer(in_data: pd.DataFrame, bound = 5):
         # Assume a UMI counts table as a pandas Data Frame.
-        # check if entire dataset is of integers (even if they're formatted as float) - and make sure they're encoded as int
+        # define upper and lower percentile bounds
         lower_bound = bound
         upper_bound = 100-bound
+        # Make sure all data are in integer format (this is necessary for operations down the line)
         if np.any(in_data.dtypes != int):
                 in_data = in_data.astype(int)
+        # initialise the list where the indices of informative rows will be.
         informative_rows = []
         for i in range(in_data.shape[0]):
+                # check for rows that have no expression data at all.
                 nonzero_idcs = in_data.iloc[i].to_numpy().nonzero()
                 nonzero_vals = in_data.iloc[i].iloc[nonzero_idcs]
-                # Test if counts are uninformative - if the distribution of counts resembles a uniform distribution, they're not informative.
+                # Create monotone dataset of the same size as the number of cells, but it's all the median value of the gene's expression
                 dummy_uniform_dist = np.repeat(np.median(nonzero_vals),len(nonzero_vals))
+                #S-K test to see if observed data are distinguishable from a non-informative monotone dataset
                 if len(nonzero_vals) == 0 or sc.stats.kstest(nonzero_vals, dummy_uniform_dist).pvalue > 0.05:
                         print(f"Row {i} is not informative...skipping it")
                 else:
