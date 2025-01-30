@@ -5,6 +5,11 @@ import scanpy as sp
 
 #Reads in a UMI-counts table in H5AD/LOOM/CSV/TSV/H5 and outputs a pandas DF, making sure the column and index headers are correct.
 def umitable_importer(in_table_file, markers):
+        """
+        INPUT: 
+        1. [string] Filename of scRNA-seq dataset.
+        2. [string] Filename of a *CSV* file with a list of gene markers for a cell population of interest.
+        """
         # H5AD/LOOM import
         if ".h5ad" in in_table_file or ".loom" in in_table_file:
                 print("input dataset is a compressed AnnData object.")
@@ -16,12 +21,13 @@ def umitable_importer(in_table_file, markers):
                         adata = sp.read_loom(in_table_file)
                 axisA = adata.obs.index
                 axisB = adata.var.loc[:,adata.var.columns[0]]
-                #Checks if data is in sparse matrix fmt and converts it to a dense matrix
+                # Checks if data is in sparse matrix format and if so, converts it to a dense matrix.
                 if type(adata.X) == sc.sparse._csr.csr_matrix:
                         print("Dataset is in sparse matrix format - converting to a dense matrix")
                         dat = pd.DataFrame(data=adata.X.to_dense().astype(int))
                 else:
                         dat = pd.DataFrame(data=adata.X.astype(int))
+        # CSV/TSV/H5 import
         if ".csv" in in_table_file:
                 print("Input data is a CSV table.")
                 dat = pd.read_csv(in_table_file, sep=",", header=0, index_col = 0)
@@ -38,10 +44,17 @@ def umitable_importer(in_table_file, markers):
                 axisA = dat.index
                 axisB = dat.columns
         axes = (axisA, axisB)
-        # Extracts the gene and cell ids, to make sure they are in the right place (for this code, cell IDs are columns and gene ids are indices).
+        
+        """
+        Extracts the gene and cell ids, to make sure they are in the right place (for this code, cell IDs are columns and gene ids are indices).
+        Specifically, a set intersect operation is done between the indices and the marker gene names and then a second intersect operation
+        is done between the column names and the marker genes. The result of both set operations tell the function which one has the gene IDs, and
+        which has the cell barcodes.
+        """
         gene_ids = [ axis for axis in axes if np.intersect1d(axis, markers).size > 0 ]
         cell_ids = [ axis for axis in axes if np.intersect1d(axis, markers).size == 0 ]
-        
+
+        # Makes sure that the table's rows and columns are organised in the way expected by the rest of the code (genes as rows, cells as columns).
         if (len(gene_ids), len(cell_ids)) == dat.shape:
                 print("Rows and columns match, ensuring correct row- and column-names.")
                 dat.index = gene_ids
@@ -51,15 +64,18 @@ def umitable_importer(in_table_file, markers):
                 dat.index = cell_ids
                 dat.columns = gene_ids
                 dat = dat.T
+        """
+        OUTPUT:
+        1. [pandas.DataFrame] The scRNA-seq data table with genes as rows and cells as columns.
+        """
         return(dat)      
            
 
 def umi_counts_transformer(in_data: pd.DataFrame, bound = 5):
-        """
-        FUNCTION TO RECODE UMI COUNTS TABLE BASED ON GLOBAL DIFFERENTIAL EXPRESSION AND REMOVE UNINFORMATIVE GENES
+        """FUNCTION TO RECODE UMI COUNTS TABLE BASED ON GLOBAL DIFFERENTIAL EXPRESSION AND REMOVE UNINFORMATIVE GENES
         *INPUT: 
-        1. UMI counts table as a pandas DF,
-        2. 'bound' variable for differential expression detection stringency
+        1. [pandas.DataFrame] UMI counts table.
+        2. [int] 'bound' variable for differential expression detection stringency
         
         First, this function removes uninformative rows by:
         simulating a monotone distribution of the same size, based on the *median* gene expression value, and removing the whole row if
@@ -73,9 +89,8 @@ def umi_counts_transformer(in_data: pd.DataFrame, bound = 5):
         Ex. bound = 5: any cell expressing the gene at a level < 5th percentile is recoded to 1
         any cell expressing the gene between the 5th percentile and the 95th percentile is recoded to 2
         any cell expressing the gene => 95th percentile is recoded to 3
-        
-        *OUTPUT: A recoded table without the uninformative rows.
         """
+        
         # Assume a UMI counts table as a pandas Data Frame.
         # define upper and lower percentile bounds
         lower_bound = bound
@@ -110,15 +125,18 @@ def umi_counts_transformer(in_data: pd.DataFrame, bound = 5):
                         # Set all other non-zero values to 2
                         in_data.iloc[i,normies] = 2
                 out_data=in_data.iloc[informative_rows]
+        """
+        OUTPUT: [pandas.DataFrame] A recoded table without the uninformative rows.
+        """
         return out_data
 
 def subpop_cell_selector(transformed_dataset: pd.DataFrame, markers: np.ndarray, percentile = 95):
         """ 
         FUNCTION TO SELECT A CELL SUBPOPULATION BASED ON GENETIC MARKERS KNOWN A PRIORI
         INPUTS:
-        1. the recoded UMI counts pandas DF (after using 'umi_counts_transformer()' above).
-        2. a list of known cell markers (eg. genes differentially expressed in our cell population of interest).
-        3. an percentile threshold.
+        1. [pandas.DataFrame] the recoded UMI counts table (after using 'umi_counts_transformer()' above).
+        2. [numpy.array] a list of known cell markers (eg. genes differentially expressed in our cell population of interest).
+        3. [int] a percentile threshold.
         
         This function FIRST checks whether the input DF has some of the informative markers.
         If they have been removed because they are not informative, the function returns a (sad) message and exits.
@@ -145,12 +163,8 @@ def subpop_cell_selector(transformed_dataset: pd.DataFrame, markers: np.ndarray,
         and on the right tail the ones differentially expressing the most markers of interest.
         
         Only the top 5% (by default) are selected as the putative cell subpopulation.
-        
-        OUTPUTS:
-        1. Boolean table as a pandas DF
-        2. *Column indices* of the inferred members of the cell subpopulation as a numpy array
-        
         """
+        
         transf = transformed_dataset
         # Check which of the subpop markers are in the 'informative markers' dataset - exit if none
         markers_present = np.intersect1d(transf.index, markers)
@@ -167,16 +181,21 @@ def subpop_cell_selector(transformed_dataset: pd.DataFrame, markers: np.ndarray,
                 subpop_marker_count = np.sum(bool_dset.iloc[:,subpop_markers],axis=0)
                 # get the column index for all cells which are on the 95th percentile of expression of markers
                 subpop_indices = np.where(subpop_marker_count >= np.percentile(subpop_marker_count,percentile))[0]
+        """
+        OUTPUTS:
+        1. [pandas.DataFrame] 'Booleanised' table
+        2. [numpy.array] *Column indices* of the inferred members of the cell subpopulation
+        """
         return(bool_dset,subpop_indices)
 
 def diff_test(bool_data: pd.DataFrame, subpop_indices, perms = 100, bound = 5):
         """
-        PERMUTATION TEST-TURBOCHARGED FUNCTION TO IDENTIFY NEW DIFFERENTIALLY EXPRESSED GENES
+        PERMUTATION TEST-GUIDED FUNCTION TO IDENTIFY NEW DIFFERENTIALLY EXPRESSED GENES
         INPUTS:
-        1. 'Booleanised' UMI dataframe
-        2. numpy array of cell subpopulation column indices
-        3. number of permutations for permutation test
-        4. percentile bound for accepting a new gene as differentially expressed
+        1. [pandas.DataFrame] 'Booleanised' UMI dataframe
+        2. [numpy.array] cell subpopulation column indices
+        3. [int] number of permutations for permutation test
+        4. [int/float] percentile bound for accepting a new gene as differentially expressed
 
         The general spirit of this function is to identify genes which are differentially expressed in cells of interest\
         by seeing how much their differential expression 'prefers' the cells of interest.
@@ -187,22 +206,28 @@ def diff_test(bool_data: pd.DataFrame, subpop_indices, perms = 100, bound = 5):
         Ex.
         Gene A is differentially expressed (has a 'True' value) in 100 out of 200 cells.
         We have 100 cells of interest. Is Gene A *preferentially* differentially expressed in our cells of interest?
+        
         Case X: If all 100 cells in which Gene A is differentially expressed are the 100 cells of interest, we would say yes.
+        
         Case Y: On the other hand, if none of 100 cells in which Gene A is differentially expressed are the 100 cells of interest,\
         we would say no. This function measures differential expression preference with a proportional expression preference (PEP) metric.
         This metric is the proportion of cells of interest (foreground cell population) in which a cell is differentially expressed *minus*\
         the proportion of the other cells (background cell population) in which a gene is differentially expressed, and it ranges from -1 to 1,\
         with 0 being no preference whatsoever.
-        Case X:
-        PEP = 1 - all cells of interest are differentially expressed, and none of the other ones are
-        Case Y:
-        PEP = -1 - no cell of interest is differentially expressed, AND all of the other ones ARE.
+        
+        Case X (above):
+        PEP = 1: all cells of interest are differentially expressed, and none of the other ones are
+        Case Y (above):
+        PEP = -1: no cell of interest is differentially expressed, AND all of the other ones ARE.
 
         But what about all the cases in between?
 
         In order to solve this problem, this function selects 100 random sets of cells *with a size equal to the number of cells of interest*.
         Then, for each gene, it calculates the PEP metric, creating a distribution of PEP values.
-        
+
+        Next, it detects the genes for which the PEP metric falls either side of the tail ends of the permutation's distribution. The\
+        threshold for 'significance' is user-defined by the 'bound' parameter (Ex. bound = 5 means that PEP values falling at either 5% end\
+        of the permutation distribution will be considered as preferentially differentially expressed in the cells of interest ('foreground' cells).        
         """
         lower_bound = bound
         upper_bound = 100-bound
@@ -233,12 +258,32 @@ def diff_test(bool_data: pd.DataFrame, subpop_indices, perms = 100, bound = 5):
         l = list(zip(obs_values,percentiles))
         dexp_idcs = np.where(list(map((lambda x: np.bitwise_or(x[0] < x[1][0], x[0] > x[1][1])),l)))[0]
         dexp_ids = bool_data.index[dexp_idcs]
+        """
+        OUTPUT:
+        1. [pandas.Series]: Gene IDs of genes showing differential expression in the cell population of interest
+        """
         return(dexp_ids)
 
 def pep(series,coords):
+        """
+        FUNCTION THAT CALCULATES THE PEP (PROPORTIONAL EXPRESSION PREFERENCE) VALUE:
+        INPUTS:
+        1. [pandas.Series] a single gene's Boolean row (True = differentially expressed, False = expressed normally)
+        2. [tuple] two numpy.array objects: at index [0], one can access the column indices of the 'foreground' cells (i.e. cells of interest), and\
+           at index [1] the column indices of the 'background' cells (all the rest).
+
+        The way the PEP works is well explained both in the original paper and in the explanation text for function 'diff_test()' above.
+
+        Essentially, it calculates the proportion of foreground cells which differentially express the gene, and subtracts to that proportion the proportion of\
+        background cells which differentially express the same gene.
+        """
         qty1 = len(coords[0])
         qty2 = len(coords[1])
         ratio_on = sum(series.iloc[coords[0]]/qty1)
         ratio_off = sum(series.iloc[coords[1]]/qty2)
         val = ratio_on - ratio_off
+        """
+        OUTPUT:
+        [float] the input gene's PEP value with the following range: [-1,1]
+        """
         return (val)
