@@ -40,7 +40,7 @@ else:
         transf = pd.read_csv(transf_file,sep=",",header=0,index_col=0)
         markers = np.genfromtxt(markers_file,delimiter=",",dtype=str)
 
-        # Select NS cells, and booleanize the dataset into False (0/2) and True (1/3)
+        # Select NS cells, and booleanize the dataset into False (2) and True (1/3)
 transf, subpop_indices = ps.subpop_cell_selector(transf, markers, ptile_markers)
 
 np.savetxt(output_prefix+"_inferred_NSCells.list",transf.columns[subpop_indices],fmt='%s',delimiter=',')
