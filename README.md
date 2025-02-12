@@ -1,5 +1,5 @@
 # README  
-This repository has all the functions used in \[publication\] to:   
+This repository has all the functions used in _Molecular characterisation of neurons across animals identify conserved gene expression_ (Rivera-Rivera CJ, Feuda R, Pisani D) to:   
 
 **I.** parse scRNA-seq datasets to detect genes that are differentially expressed in nerve cells - these functions can be generalised for any other cell population. 
 
